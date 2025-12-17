@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive game to learn when to use Scripts, Workflows, or AI Agents for automation tasks">
+    <meta name="keywords" content="automation, IT, learning game, scripts, workflows, AI agents">
+    <meta name="author" content="Your Name">
+    <title>Automation Arena - Learn Automation Decision Making</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* Custom Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono&display=swap');
+        
+        body { 
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+        
+        /* 3D Card Effect */
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        /* Card Animation - Entry */
+        .card-enter {
+            animation: cardSlide 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        
+        /* Card Animation - Exit */
+        .card-exit {
+            animation: cardExit 0.4s ease-in forwards;
+        }
+        
+        @keyframes cardSlide {
+            0% { 
+                opacity: 0; 
+                transform: translateY(100px) rotateX(-20deg) scale(0.8);
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateY(0) rotateX(0deg) scale(1);
+            }
+        }
+        
+        @keyframes cardExit {
+            0% { 
+                opacity: 1; 
+                transform: translateY(0) rotateX(0deg);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translateY(-100px) rotateX(20deg) scale(0.8);
+            }
+        }
+        
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* Pulse Animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        /* Glow Effect */
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.8); }
+        }
+        
+        .float { animation: float 3s ease-in-out infinite; }
+        .pulse-animation { animation: pulse 2s ease-in-out infinite; }
+        .glow { animation: glow 2s ease-in-out infinite; }
+        
+        /* Gradient Icons for Each Type */
+        .icon-script {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        }
+        
+        .icon-workflow {
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        }
+        
+        .icon-agent {
+            background: linear-gradient(135deg, #10b981 0%, #84cc16 100%);
+        }
+        
+        /* Progress Ring Animation */
+        .progress-ring {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        
+        /* Glassmorphism Effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Background Particles */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat 3s ease-in-out infinite;
+        }
+        
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+            50% { transform: translateY(-100px) translateX(20px); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 select-none relative">
+    
+    <!-- Animated Background Particles Container -->
+    <div id="particles" class="fixed inset-0 pointer-events-none"></div>
+
+    <!-- Score Display - Fixed at Top -->
+    <div class="fixed top-6 left-1/2 transform -translate-x-1/2 glass rounded-full px-8 py-4 z-50">
+        <div class="flex items-center gap-6">
+            <!-- Score Counter -->
+            <div class="text-center">
+                <div class="text-white/60 text-xs font-bold uppercase tracking-wider mb-1">Score</div>
+                <div class="text-3xl font-bold text-white">
+                    <span id="score">0</span><span class="text-white/40">/</span><span id="total" class="text-white/80">52</span>
+                </div>
+            </div>
+            
+            <!-- Circular Progress Indicator -->
+            <div class="w-16 h-16 relative">
+                <svg class="transform -rotate-90 w-16 h-16">
+                    <circle cx="32" cy="32" r="28" stroke="rgba(255,255,255,0.2)" stroke-width="4" fill="none"/>
+                    <circle id="progress-ring" cx="32" cy="32" r="28" stroke="#10b981" stroke-width="4" fill="none"
+                        stroke-dasharray="176" stroke-dashoffset="176" class="progress-ring"/>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center text-white font-bold text-sm" id="progress-percent">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Container -->
+    <div class="relative w-full max-w-4xl h-[600px] perspective-1000">
+        
+        <!-- START SCREEN -->
+        <div id="start-screen" class="absolute inset-0 flex flex-col items-center justify-center text-center z-20">
+            <!-- Animated Brain Icon -->
+            <div class="float mb-8">
+                <div class="w-32 h-32 rounded-3xl bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center shadow-2xl glow">
+                    <i class="fas fa-brain text-6xl text-white"></i>
+                </div>
+            </div>
+            
+            <!-- Title -->
+            <h1 class="text-6xl font-bold text-white mb-4 drop-shadow-lg">Automation Arena</h1>
+            <p class="text-2xl text-white/80 mb-2">52 Real-World Scenarios</p>
+            <p class="text-lg text-white/60 mb-12 max-w-xl">Master the art of choosing between Scripts, Workflows, and AI Agents</p>
+            
+            <!-- Start Button -->
+            <button onclick="startGame()" class="group relative px-12 py-5 bg-white text-purple-600 rounded-full font-bold text-xl hover:scale-110 transition-all duration-300 shadow-2xl hover:shadow-purple-500/50">
+                <span class="relative z-10 flex items-center gap-3">
+                    <i class="fas fa-play"></i>
+                    Start Challenge
+                    <i class="fas fa-arrow-right transform group-hover:translate-x-2 transition-transform"></i>
+                </span>
+            </button>
+            
+            <!-- Legend - Explaining the Three Types -->
+            <div class="mt-16 grid grid-cols-3 gap-6 text-white/80">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg icon-script flex items-center justify-center">
+                        <i class="fas fa-code text-sm"></i>
+                    </div>
+                    <span class="text-sm font-medium">Script: Fixed & Simple</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg icon-workflow flex items-center justify-center">
+                        <i class="fas fa-project-diagram text-sm"></i>
+                    </div>
+                    <span class="text-sm font-medium">Workflow: Multi-Step Logic</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg icon-agent flex items-center justify-center">
+                        <i class="fas fa-robot text-sm"></i>
+                    </div>
+                    <span class="text-sm font-medium">Agent: AI Reasoning</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME CARD SCREEN -->
+        <div id="game-card" class="hidden absolute inset-0 z-10">
+            <div class="card-3d h-full bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-12 flex flex-col border-4 border-white/50">
+                
+                <!-- Card Header -->
+                <div class="flex justify-between items-start mb-8">
+                    <div class="flex items-center gap-3">
+                        <!-- Dynamic Icon Based on Scenario Type -->
+                        <div id="card-icon" class="w-12 h-12 rounded-xl icon-script flex items-center justify-center shadow-lg">
+                            <i class="fas fa-lightbulb text-xl text-white"></i>
+                        </div>
+                        <div>
+                            <!-- Domain Tag (e.g., ITSM, HR, DevOps) -->
+                            <span id="card-domain" class="block text-sm font-bold text-purple-600 uppercase tracking-wider">ITSM</span>
+                            <!-- Card Counter -->
+                            <span id="card-count" class="text-xs text-gray-400 font-mono">1/52</span>
+                        </div>
+                    </div>
+                    
+                    <!-- macOS-style Window Buttons -->
+                    <div class="flex gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                    </div>
+                </div>
+                
+                <!-- Scenario Text - Centered -->
+                <div class="flex-grow flex items-center justify-center mb-8">
+                    <div class="text-center max-w-2xl">
+                        <h3 id="card-scenario" class="text-3xl font-bold text-gray-800 leading-relaxed">
+                            Loading scenario...
+                        </h3>
+                    </div>
+                </div>
+
+                <!-- Choice Buttons - Script, Workflow, Agent -->
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- Script Button -->
+                    <button onclick="makeChoice('Script')" class="group relative overflow-hidden py-8 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl bg-gradient-to-br from-purple-500 to-pink-600 text-white">
+                        <div class="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
+                        <div class="relative z-10">
+                            <div class="text-xs uppercase opacity-80 mb-2">Fixed & Rigid</div>
+                            <i class="fas fa-code text-4xl mb-2 block"></i>
+                            <div class="text-xl">Script</div>
+                        </div>
+                    </button>
+                    
+                    <!-- Workflow Button -->
+                    <button onclick="makeChoice('Workflow')" class="group relative overflow-hidden py-8 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white">
+                        <div class="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
+                        <div class="relative z-10">
+                            <div class="text-xs uppercase opacity-80 mb-2">Structured Rules</div>
+                            <i class="fas fa-project-diagram text-4xl mb-2 block"></i>
+                            <div class="text-xl">Workflow</div>
+                        </div>
+                    </button>
+                    
+                    <!-- Agent Button -->
+                    <button onclick="makeChoice('Agent')" class="group relative overflow-hidden py-8 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-2xl bg-gradient-to-br from-green-500 to-lime-600 text-white">
+                        <div class="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
+                        <div class="relative z-10">
+                            <div class="text-xs uppercase opacity-80 mb-2">Ambiguous Goal</div>
+                            <i class="fas fa-robot text-4xl mb-2 block"></i>
+                            <div class="text-xl">Agent</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- END SCREEN -->
+        <div id="end-screen" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center z-20">
+            <!-- Trophy Icon - Color changes based on score -->
+            <div class="pulse-animation mb-8">
+                <div id="trophy-icon" class="w-40 h-40 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-2xl">
+                    <i class="fas fa-trophy text-7xl text-white"></i>
+                </div>
+            </div>
+            
+            <h2 class="text-5xl font-bold text-white mb-4 drop-shadow-lg">Challenge Complete!</h2>
+            <!-- Final Score Percentage -->
+            <div class="text-8xl font-black text-white mb-6 drop-shadow-2xl" id="final-score">0%</div>
+            <!-- Custom Message Based on Performance -->
+            <p id="final-message" class="text-2xl text-white/80 mb-12 max-w-xl">Great job!</p>
+            
+            <!-- Play Again Button -->
+            <button onclick="location.reload()" class="px-12 py-5 bg-white text-purple-600 rounded-full font-bold text-xl hover:scale-110 transition-all duration-300 shadow-2xl">
+                <i class="fas fa-redo mr-3"></i>Play Again
+            </button>
+        </div>
+    </div>
+
+    <!-- FEEDBACK MODAL - Shows after each answer -->
+    <div id="feedback-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-95" id="feedback-content">
+            <!-- Modal Header - Color changes based on correct/incorrect -->
+            <div id="feedback-header" class="p-8 text-white text-center relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20">
+                    <div class="absolute inset-0 bg-gradient-to-br from-transparent to-black/20"></div>
+                </div>
+                <div class="relative z-10">
+                    <i id="feedback-icon" class="text-6xl mb-4 block"></i>
+                    <h2 id="feedback-title" class="text-3xl font-bold">Correct!</h2>
+                </div>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="p-8">
+                <!-- Reasoning Section -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-brain text-purple-500"></i>
+                        <span class="text-sm font-bold text-gray-400 uppercase tracking-wider">The Logic</span>
+                    </div>
+                    <p id="feedback-reasoning" class="text-gray-800 text-xl font-medium leading-relaxed">Reasoning goes here...</p>
+                </div>
+                
+                <!-- Technical Implementation Section -->
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border-2 border-gray-200">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-terminal text-blue-500"></i>
+                        <span class="text-sm font-bold text-gray-500 uppercase tracking-wider">Implementation</span>
+                    </div>
+                    <p id="feedback-tech" class="text-sm text-gray-700 font-mono break-words leading-relaxed">Example code...</p>
+                </div>
+
+                <!-- Next Card Button -->
+                <button onclick="nextCard()" class="w-full mt-8 py-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 flex justify-center items-center gap-3 group shadow-xl">
+                    Next Scenario 
+                    <i class="fas fa-arrow-right transform group-hover:translate-x-2 transition-transform"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================
+        // GAME DATA - 52 Scenarios Covering Multiple Domains
+        // =====================================================
+        
+        /**
+         * Create animated background particles for visual appeal
+         */
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for(let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 3 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        /**
+         * Full deck of 52 scenarios
+         * Each scenario has:
+         * - id: Unique identifier
+         * - domain: Category (ITSM, DevOps, HR, etc.)
+         * - text: The scenario description
+         * - type: Correct answer (Script, Workflow, or Agent)
+         * - reasoning: Why this is the correct classification
+         * - tech: Technical implementation example
+         */
+        const deck = [
+            // SCRIPTS (15 scenarios) - Simple, deterministic tasks
+            {id:1, domain:"ITSM", text:"Reset an Active Directory password for a specific user ID upon receiving a validated API call.", type:"Script", reasoning:"Single task, fixed input, zero ambiguity.", tech:"PowerShell: Set-ADAccountPassword"},
+            {id:2, domain:"ITAM", text:"Update the 'Last Audit Date' field in the asset database for a batch of 500 scanned laptops.", type:"Script", reasoning:"Batch processing of structured data. Same action applied to every row.", tech:"SQL: UPDATE Assets SET LastAudit = GETDATE()"},
+            {id:3, domain:"ITOM", text:"Restart the 'Print Spooler' service on a server whenever CPU usage for that process drops to 0%.", type:"Script", reasoning:"Simple trigger-action loop based on a threshold.", tech:"Bash: if service.status == 'stopped' then service.start()"},
+            {id:4, domain:"HR", text:"Generate a standard 'Employment Verification Letter' PDF using a template and current DB fields.", type:"Script", reasoning:"String replacement. Input data is mapped 1:1 to template.", tech:"Python Jinja2 Templating / Mail Merge"},
+            {id:5, domain:"SecOps", text:"Add a specific IP address to the firewall 'Block List' immediately after it is flagged by a threat feed.", type:"Script", reasoning:"Decision made upstream. Execution is a simple API call.", tech:"Firewall API: POST /block-list {ip: '1.2.3.4'}"},
+            {id:6, domain:"CRM", text:"Export all leads created in the last 24 hours into a CSV file and upload it to an FTP folder.", type:"Script", reasoning:"Data movement (ETL). No decision making.", tech:"Python: pandas.to_csv() + ftplib"},
+            {id:7, domain:"DevOps", text:"Delete all Docker containers tagged 'test-environment' every night at 12:00 AM.", type:"Script", reasoning:"Cleanup task based on a fixed tag/time rule.", tech:"Cron: docker system prune --filter label=test"},
+            {id:8, domain:"ITAM", text:"Assign a software license to a user profile when they are added to the 'Adobe Users' AD group.", type:"Script", reasoning:"Direct mapping (Group A = License B).", tech:"PowerShell: Event Listener on AD Group Change"},
+            {id:9, domain:"Finance", text:"Convert a batch of currency values from USD to EUR using the day's fixed exchange rate.", type:"Script", reasoning:"Mathematical calculation using a fixed variable.", tech:"Excel Macro / Python: amount * rate"},
+            {id:10, domain:"Risk", text:"Archive audit logs older than 90 days from the primary database to cold storage.", type:"Script", reasoning:"Date-based file movement.", tech:"Shell: find /logs -mtime +90 -exec mv {}"},
+            {id:11, domain:"Facilities", text:"Send a 'Badge Access Granted' email notification to security when a new employee record is created.", type:"Script", reasoning:"Notification triggered by a database insert event.", tech:"DB Trigger / Webhook -> SMTP"},
+            {id:12, domain:"ITSM", text:"Close a ticket automatically if the status has been 'Resolved' for 5 days with no user reply.", type:"Script", reasoning:"State transition based on a timer.", tech:"ServiceNow Scheduled Job"},
+            {id:13, domain:"Network", text:"Ping a list of 50 critical routers every minute and log 'Success' or 'Fail' to a text file.", type:"Script", reasoning:"Loop function performing identical check.", tech:"Python loop: os.system('ping ' + ip)"},
+            {id:14, domain:"HR", text:"Update an employee's home address in the payroll system based on a structured form submission.", type:"Script", reasoning:"CRUD operation (Update).", tech:"SQL UPDATE / API PATCH"},
+            {id:15, domain:"General", text:"Rename a batch of 100 uploaded image files to follow the naming convention YYYY-MM-DD_Filename.", type:"Script", reasoning:"String manipulation pattern.", tech:"Regex Substitution"},
+            
+            // WORKFLOWS (15 scenarios) - Multi-step processes with conditional logic
+            {id:16, domain:"HR", text:"Provision laptop, create email, and assign Slack channels triggered by a signed offer letter.", type:"Workflow", reasoning:"Multi-step dependency. Cannot assign Slack until Email is created.", tech:"Orchestrator: Sequential 'Wait For' blocks"},
+            {id:17, domain:"ITSM", text:"Route a 'Normal Change Request' to the CAB for approval, then schedule deployment.", type:"Workflow", reasoning:"Human-in-the-loop gate. Pauses state until external signal.", tech:"State Machine: Wait_For_Approval(Group)"},
+            {id:18, domain:"SecOps", text:"If user reports email: Check sender vs whitelist. If unknown, scan attachments. If malicious, alert SOC.", type:"Workflow", reasoning:"Decision Tree. Path determined by binary checks.", tech:"SOAR Playbook: Switch/Case Logic"},
+            {id:19, domain:"ITAM", text:"Identify old laptops. Email user offer. If Accept -> Create PO. If Decline -> Snooze 6 months.", type:"Workflow", reasoning:"Interactive loop. Branches based on user reply.", tech:"BPMN: If Response == 'Yes' Then..."},
+            {id:20, domain:"Procurement", text:"Vendor Invoice: If amount <$5k, auto-approve. If >$5k, route to Finance Director.", type:"Workflow", reasoning:"Threshold-based routing rules.", tech:"ERP Workflow: If Amount > 5000 Then RouteTo()"},
+            {id:21, domain:"CRM", text:"If customer downloads whitepaper, wait 2 days. Send Email A. If opened, Send Email B.", type:"Workflow", reasoning:"Time-based sequence with behavioral triggers.", tech:"Marketing Automation: Delay() -> If Opened -> ..."},
+            {id:22, domain:"ITOM", text:"Monitor traffic. If CPU > 80% for 10 mins, spin up 2 VMs. If < 30%, terminate instance.", type:"Workflow", reasoning:"Closed-loop control system with pre-defined scaling rules.", tech:"Auto-Scaling Group Policy"},
+            {id:23, domain:"Risk", text:"Send security questionnaire. Remind every 3 days. Once submitted, if score < 70, flag for review.", type:"Workflow", reasoning:"Scoring logic with specific escalation paths.", tech:"GRC Workflow: Score Calculation & Routing"},
+            {id:24, domain:"Legal", text:"Route contract to Legal. If 'confidentiality' keyword missing, return to drafter. Else forward to sign.", type:"Workflow", reasoning:"Keyword check routing. Simple validation.", tech:"Doc Mgmt: If !Contains('Confidentiality')"},
+            {id:25, domain:"ITSM", text:"Major Incident: Automatically spin up bridge, page DevOps team, and SMS the CIO.", type:"Workflow", reasoning:"Parallel execution of distinct tasks.", tech:"Playbook: Fork Execution"},
+            {id:26, domain:"HR", text:"Vacation Request: Check balance. If sufficient, route to Manager. If approved, deduct balance.", type:"Workflow", reasoning:"Database check + Approval routing.", tech:"HRIS Workflow Logic"},
+            {id:27, domain:"DevOps", text:"Commit code -> Run Tests. If Pass -> Deploy to Staging. If Fail -> Slack Developer.", type:"Workflow", reasoning:"Sequence of strict gates. Error paths.", tech:"CI/CD Pipeline (Jenkins/GitHub Actions)"},
+            {id:28, domain:"Facilities", text:"If meeting room booked but sensor detects no motion for 15 mins, auto-cancel booking.", type:"Workflow", reasoning:"Sensor input integration with logic gates.", tech:"IoT Rule: If Sensor=0 AND Time>15m"},
+            {id:29, domain:"ITAM", text:"Scan for unused software. Email user. If they agree or don't reply in 7 days, trigger uninstall.", type:"Workflow", reasoning:"Timed interaction handling 'Happy Path' and 'No Response'.", tech:"Client Mgmt Flow: State Tracking"},
+            {id:30, domain:"CSM", text:"Refund Request: If purchase <14 days ago and reason is 'Defective', auto-issue refund.", type:"Workflow", reasoning:"Policy enforcement based on structured fields.", tech:"Support Logic: If DateDiff < 14..."},
+            
+            // AGENTS (15 scenarios) - Ambiguous goals requiring AI reasoning
+            {id:31, domain:"ITSM", text:"Analyze 5,000 messy log lines to determine why checkout was slow between 2:00 and 2:15 PM.", type:"Agent", reasoning:"Interpreting messy data and formulating hypotheses.", tech:"ReAct Pattern: Reason + Act loops"},
+            {id:32, domain:"HR", text:"Read 200 PDF resumes and identify 5 candidates with 'leadership potential' and 'startup grit'.", type:"Agent", reasoning:"Semantic extraction. 'Grit' is not a keyword.", tech:"RAG (Retrieval Augmented Generation)"},
+            {id:33, domain:"ITAM", text:"Read a complex 50-page license agreement and suggest 3 ways to save money based on usage.", type:"Agent", reasoning:"Reading unstructured legalese vs structured usage data.", tech:"Chain of Thought / Planning"},
+            {id:34, domain:"SecOps", text:"Investigate user activity. No alerts triggered, but behavior 'feels' weird. Check for insider threat.", type:"Agent", reasoning:"Anomaly detection based on context, not signatures.", tech:"Self-Consistency / Reflection"},
+            {id:35, domain:"Service Desk", text:"User email: 'My computer is acting weird and the thingy is flashing.' Classify ticket.", type:"Agent", reasoning:"High ambiguity. Requires conversational clarification.", tech:"Active Questioning / Intent Recognition"},
+            {id:36, domain:"Knowledge", text:"Look at last month's VPN tickets and generate a new FAQ summarizing common fixes.", type:"Agent", reasoning:"Synthesizing trends from unique text descriptions.", tech:"Map-Reduce Summarization"},
+            {id:37, domain:"Procurement", text:"Email a vendor to negotiate a better delivery date by leveraging our 'Gold Partner' status.", type:"Agent", reasoning:"Goal-oriented dynamic conversation.", tech:"RLHF / Dynamic Persona"},
+            {id:38, domain:"DevOps", text:"Read this legacy Python script with no comments, understand it, and rewrite it to be efficient.", type:"Agent", reasoning:"Understanding intent without documentation.", tech:"In-Context Learning / Coding LLM"},
+            {id:39, domain:"Risk", text:"Monitor global privacy regulations. Alert only if a change impacts our specific data architecture.", type:"Agent", reasoning:"Semantic filtering. Matching law concepts to tech stack.", tech:"Semantic Search / Embeddings"},
+            {id:40, domain:"ITOM", text:"DB is locking up. Error unknown. Search StackOverflow, propose fix, and ask for permission.", type:"Agent", reasoning:"Novel error handling using external tools.", tech:"Tool Use (Web Search)"},
+            {id:41, domain:"Sales", text:"Scrape web for prospect's news/financials and write a 1-page summary of strategic pain points.", type:"Agent", reasoning:"Synthesizing disparate sources into a narrative.", tech:"Multi-Agent Collaboration"},
+            {id:42, domain:"ITSM", text:"Monitor Slack. Identify users who are becoming frustrated (based on tone) and alert a manager.", type:"Agent", reasoning:"Sentiment/Tone analysis (Nuance).", tech:"LLM Sentiment Analysis"},
+            {id:43, domain:"Data Gov", text:"Scan shared drive. Open files and tag as 'Confidential' based on content context, not just keywords.", type:"Agent", reasoning:"Contextual classification.", tech:"Zero-Shot Classification"},
+            {id:44, domain:"UX/Design", text:"Generate 5 variations of a UI mockup for a new dashboard based on brand guidelines.", type:"Agent", reasoning:"Creative generation under constraints.", tech:"Multi-Modal Generation"},
+            {id:45, domain:"CRM", text:"Draft a personalized re-engagement email addressing a client's specific complaints about pricing.", type:"Agent", reasoning:"Contextual generation.", tech:"Context-Aware Writing"},
+            
+            // BORDERLINE/TRICK QUESTIONS (7 scenarios) - Tests deeper understanding
+            {id:46, domain:"Borderline", text:"Backing up a database to the cloud.", type:"Script", reasoning:"Usually a Script/Workflow. Use Script if simple dump. Workflow if verifying integrity.", tech:"Trick Question: Context matters."},
+            {id:47, domain:"Borderline", text:"Chatbot for password reset.", type:"Workflow", reasoning:"Workflow if button menu. Agent if it handles 'I forgot my mom's maiden name'.", tech:"Trick Question: NLU vs Menu."},
+            {id:48, domain:"Borderline", text:"Extracting data from an invoice.", type:"Workflow", reasoning:"Workflow if template-based (OCR). Agent if layout varies wildly.", tech:"Trick Question: Variability matters."},
+            {id:49, domain:"Borderline", text:"Organizing emails into folders.", type:"Script", reasoning:"Script if filtering by sender. Agent if filtering by 'Priority/Meaning'.", tech:"Trick Question: Rules vs Semantics."},
+            {id:50, domain:"Borderline", text:"Detecting unauthorized software.", type:"Workflow", reasoning:"Workflow if checking Blacklist. Agent if analyzing behavior.", tech:"Trick Question: Signature vs Heuristic."},
+            {id:51, domain:"Borderline", text:"Scheduling an interview.", type:"Workflow", reasoning:"Workflow if 'Find Empty Slot'. Agent if negotiating time via email.", tech:"Trick Question: Coordination vs Calculation."},
+            {id:52, domain:"Wildcard", text:"'Make the CEO happy.'", type:"Agent", reasoning:"The ultimate Agent trap. Abstract goal, dynamic planning, tool use.", tech:"AGI-Lite / Autonomous Goal Seeking"}
+        ];
+
+        // =====================================================
+        // GAME STATE VARIABLES
+        // =====================================================
+        
+        let currentIndex = 0;       // Current card being shown
+        let score = 0;              // Number of correct answers
+        let currentCard = null;     // Currently displayed card object
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const gameCard = document.getElementById('game-card');
+        const endScreen = document.getElementById('end-screen');
+        const modal = document.getElementById('feedback-modal');
+        
+        // UI Elements
+        const uiScenario = document.getElementById('card-scenario');
+        const uiDomain = document.getElementById('card-domain');
+        const uiCount = document.getElementById('card-count');
+        const uiScore = document.getElementById('score');
+        const uiTotal = document.getElementById('total');
+        const progressRing = document.getElementById('progress-ring');
+        const progressPercent = document.getElementById('progress-percent');
+
+        // Modal Elements
+        const fbHeader = document.getElementById('feedback-header');
+        const fbIcon = document.getElementById('feedback-icon');
+        const fbTitle = document.getElementById('feedback-title');
+        const fbReasoning = document.getElementById('feedback-reasoning');
+        const fbTech = document.getElementById('feedback-tech');
+
+        // =====================================================
+        // GAME FUNCTIONS
+        // =====================================================
+        
+        /**
+         * Update the circular progress indicator
+         */
+        function updateProgress() {
+            const percent = Math.round((currentIndex / deck.length) * 100);
+            const circumference = 2 * Math.PI * 28; // 2πr where r=28
+            const offset = circumference - (percent / 100) * circumference;
+            progressRing.style.strokeDashoffset = offset;
+            progressPercent.textContent = percent + '%';
+        }
+
+        /**
+         * Start the game - shuffle deck and show first card
+         */
+        function startGame() {
+            // Fisher-Yates shuffle algorithm to randomize card order
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+
+            // Reset game state
+            currentIndex = 0;
+            score = 0;
+            uiTotal.innerText = deck.length;
+            uiScore.innerText = '0';
+            updateProgress();
+            
+            // Hide start screen, show game card
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            gameCard.classList.remove('hidden');
+            
+            loadCard();
+        }
+
+        /**
+         * Load and display the current card
+         */
+        function loadCard() {
+            currentCard = deck[currentIndex];
+            uiScenario.innerText = currentCard.text;
+            uiDomain.innerText = currentCard.domain;
+            uiCount.innerText = `${currentIndex + 1}/${deck.length}`;
+            updateProgress();
+            
+            // Change card icon color based on correct answer type
+            const cardIcon = document.getElementById('card-icon');
+            if(currentCard.type === 'Script') {
+                cardIcon.className = 'w-12 h-12 rounded-xl icon-script flex items-center justify-center shadow-lg';
+            } else if(currentCard.type === 'Workflow') {
+                cardIcon.className = 'w-12 h-12 rounded-xl icon-workflow flex items-center justify-center shadow-lg';
+            } else {
+                cardIcon.className = 'w-12 h-12 rounded-xl icon-agent flex items-center justify-center shadow-lg';
+            }
+        }
+
+        /**
+         * Handle user's choice - check if correct and show feedback
+         * @param {string} userChoice - "Script", "Workflow", or "Agent"
+         */
+        function makeChoice(userChoice) {
+            const isCorrect = userChoice === currentCard.type;
+            
+            // Update score if correct
+            if(isCorrect) {
+                score++;
+                uiScore.innerText = score;
+            }
+
+            showFeedback(isCorrect, userChoice);
+        }
+
+        /**
+         * Display feedback modal with reasoning and technical details
+         * @param {boolean} isCorrect - Whether the user's answer was correct
+         * @param {string} userChoice - The user's selected answer
+         */
+        function showFeedback(isCorrect, userChoice) {
+            modal.classList.remove('hidden');
+            
+            if (isCorrect) {
+                // Green gradient for correct answers
+                fbHeader.className = "p-8 text-white text-center relative overflow-hidden bg-gradient-to-br from-green-500 to-emerald-600";
+                fbIcon.className = "fas fa-check-circle text-6xl mb-4 block";
+                fbTitle.innerText = "Correct!";
+            } else {
+                // Red gradient for incorrect answers
+                fbHeader.className = "p-8 text-white text-center relative overflow-hidden bg-gradient-to-br from-red-500 to-pink-600";
+                fbIcon.className = "fas fa-times-circle text-6xl mb-4 block";
+                fbTitle.innerText = `Not quite. It's a ${currentCard.type}.`;
+            }
+
+            // Display reasoning and technical implementation
+            fbReasoning.innerText = currentCard.reasoning;
+            fbTech.innerText = currentCard.tech;
+        }
+
+        /**
+         * Move to the next card or show end screen if finished
+         */
+        function nextCard() {
+            modal.classList.add('hidden');
+            currentIndex++;
+
+            if (currentIndex < deck.length) {
+                // More cards remaining - load next card with animation
+                gameCard.querySelector('.card-3d').classList.remove('card-enter');
+                void gameCard.offsetWidth; // Force reflow to restart animation
+                gameCard.querySelector('.card-3d').classList.add('card-enter');
+                loadCard();
+            } else {
+                // Game complete - show end screen with results
+                gameCard.classList.add('hidden');
+                endScreen.classList.remove('hidden');
+                
+                // Calculate final percentage
+                const finalPct = Math.round((score / deck.length) * 100);
+                document.getElementById('final-score').innerText = `${finalPct}%`;
+                
+                // Customize message and trophy color based on performance
+                const msg = document.getElementById('final-message');
+                const trophy = document.getElementById('trophy-icon');
+                if(finalPct === 100) {
+                    msg.innerText = "Perfect! You are an Automation Architect!";
+                    trophy.className = "w-40 h-40 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-2xl";
+                } else if(finalPct > 80) {
+                    msg.innerText = "Excellent work. You know your patterns.";
+                    trophy.className = "w-40 h-40 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shadow-2xl";
+                } else if(finalPct > 60) {
+                    msg.innerText = "Good job. Watch out for those ambiguous cases.";
+                    trophy.className = "w-40 h-40 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center shadow-2xl";
+                } else {
+                    msg.innerText = "Keep practicing. Remember: Ambiguity = Agent.";
+                    trophy.className = "w-40 h-40 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center shadow-2xl";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
